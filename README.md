@@ -8,7 +8,7 @@ Full-stack order tracking platform with strict status flow validation, search/fi
 - Backend: Node.js + Express
 - Database: SQLite
 - Deployment targets:
-  - Frontend: Netlify
+  - Frontend: Vercel
   - Backend: Render
 
 ## Key Features
@@ -160,7 +160,7 @@ This repo already includes `render.yaml`.
 1. Connect repository in Render.
 2. Render will detect the web service in `backend`.
 3. Set environment variable:
-   - `FRONTEND_API_URL` = your Netlify site URL
+  - `FRONTEND_API_URL` = your Vercel site URL (no trailing slash)
 4. Deploy.
 
 ### Option B: Manual Render setup
@@ -172,22 +172,49 @@ This repo already includes `render.yaml`.
   - `PORT` (Render can manage automatically)
   - `FRONTEND_API_URL`
 
-## Deploy on Netlify (Frontend)
+## Deploy on Vercel (Frontend)
 
-This repo includes `netlify.toml` configured for `frontend`.
+Deploy the frontend project from the `frontend` directory in Vercel.
 
-1. Connect repository in Netlify.
-2. Netlify reads:
-   - Base: `frontend`
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-3. Add environment variable in Netlify:
+1. Connect repository in Vercel.
+2. Configure project settings:
+  - Root directory: `frontend`
+  - Build command: `npm run build`
+  - Output directory: `dist`
+3. Add environment variable in Vercel:
    - `VITE_FRONTEND_API_URL` = Render backend URL + `/api`
      - Example: `https://your-render-service.onrender.com/api`
 4. Deploy.
+
+## Deployment Validation
+
+1. Backend health should return plain text:
+  - `https://your-render-service.onrender.com/health`
+  - Expected response: `OK`
+2. Frontend should call API using:
+  - `VITE_FRONTEND_API_URL=https://your-render-service.onrender.com/api`
+3. CORS allowlist should match your live Vercel URL exactly:
+  - `FRONTEND_API_URL=https://your-app.vercel.app`
+
+## Render 521 Troubleshooting
+
+If you see `Web server is down (521)`:
+
+1. Confirm Render service settings:
+  - Root Directory: `backend`
+  - Build Command: `npm install`
+  - Start Command: `npm start`
+2. Trigger deploy:
+  - `Manual Deploy -> Clear build cache and deploy`
+3. Check startup logs in Render for crash details.
+4. Ensure backend entrypoint is correct:
+  - `backend/server.js`
+5. Ensure dynamic port is used:
+  - `const PORT = process.env.PORT || 5000`
+6. Re-test backend health endpoint before testing frontend.
 
 ## Notes
 
 - SQLite file is auto-created at `backend/data/orders.db`.
 - Timestamps are included for each order and updated on status changes.
-- CORS is configured for deployed frontend through `FRONTEND_API_URL`.
+- CORS is enabled for API requests.
