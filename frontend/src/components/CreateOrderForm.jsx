@@ -18,18 +18,22 @@ function CreateOrderForm({ onOrderCreated, onMessage }) {
         setLoading(false);
 
         if (!result.ok) {
-            onMessage({ type: "error", text: result.body.message || "Failed to create order" });
+            onMessage({
+                type: "error",
+                text: result.body.message || result.body.error || "Failed to create order",
+            });
             return;
         }
 
         setCustomerName("");
-        onOrderCreated(result.body.data);
-        onMessage({ type: "success", text: "Order created successfully" });
+        onOrderCreated();
+        onMessage({ type: "success", text: result.body.message || "Order created successfully" });
     }
 
     return (
         <form onSubmit={handleSubmit} className="card">
             <h2>Create Order</h2>
+            <p className="muted">Every new order starts in Placed status.</p>
             <div className="field">
                 <label htmlFor="customerName">Customer Name</label>
                 <input
@@ -38,6 +42,7 @@ function CreateOrderForm({ onOrderCreated, onMessage }) {
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Enter customer name"
+                    disabled={loading}
                 />
             </div>
             <button type="submit" disabled={loading}>

@@ -1,19 +1,42 @@
-# Order Tracking System
+# Order Tracking System (Production-Ready)
 
-A minimal full-stack Order Tracking System built with:
+Full-stack order tracking platform with strict status flow validation, search/filtering, dashboard metrics, and deployment-ready setup.
 
+## Tech Stack
+
+- Frontend: React + Vite
 - Backend: Node.js + Express
-- Frontend: React (functional components + hooks)
-- Database: SQLite (SQL)
+- Database: SQLite
+- Deployment targets:
+  - Frontend: Netlify
+  - Backend: Render
 
-## Features
+## Key Features
 
-- Create Order (`POST /api/orders`) with default status `Placed`
-- Update Order Status (`PUT /api/orders/:id`) with strict flow:
-  - `Placed -> Packed -> Shipped -> Delivered`
-- Get Single Order (`GET /api/orders/:id`)
-- Get All Orders (`GET /api/orders`)
-- Basic error handling and success/failure messages in UI
+- Strict order lifecycle:
+  - Placed -> Packed -> Shipped -> Delivered
+  - No skipping steps
+  - No backward movement
+- Visual order progress stepper:
+  - Completed steps in green
+  - Current step highlighted
+  - Future steps in gray
+- Status badges:
+  - Placed (gray)
+  - Packed (blue)
+  - Shipped (orange)
+  - Delivered (green)
+- Search by customer name
+- Filter by status
+- Dashboard cards:
+  - Total Orders
+  - Delivered Orders
+  - Pending Orders
+- Timestamps:
+  - createdAt
+  - updatedAt
+- Toast alerts and loading states
+- Structured API responses for production clients
 
 ## Project Structure
 
@@ -23,131 +46,148 @@ Order Tracking/
     src/
       config/
       controllers/
+      middleware/
       models/
       routes/
+      utils/
+    .env.example
   frontend/
     src/
       components/
+    .env.example
+  netlify.toml
+  render.yaml
 ```
 
-## Backend Setup
+## Environment Variables
 
-1. Go to backend folder:
+### Backend (`backend/.env`)
+
+Use `backend/.env.example` as a reference:
+
+```env
+PORT=5000
+FRONTEND_API_URL=http://localhost:5173
+```
+
+### Frontend (`frontend/.env`)
+
+Use `frontend/.env.example` as a reference:
+
+```env
+VITE_FRONTEND_API_URL=http://localhost:5000/api
+```
+
+The frontend reads `VITE_FRONTEND_API_URL` (or `VITE_API_URL`) and does not hardcode localhost in app code.
+
+## Local Development
+
+### 1) Run Backend
 
 ```bash
 cd backend
-```
-
-2. Install dependencies:
-
-```bash
 npm install
-```
-
-3. Start server:
-
-```bash
 npm run dev
 ```
 
-Backend runs on: `http://localhost:5000`
+Backend default URL: `http://localhost:5000`
 
-Health check: `GET http://localhost:5000/health`
-
-## Frontend Setup
-
-1. Open a new terminal and go to frontend folder:
+### 2) Run Frontend
 
 ```bash
 cd frontend
-```
-
-2. Install dependencies:
-
-```bash
 npm install
-```
-
-3. Start frontend:
-
-```bash
 npm run dev
 ```
 
-Frontend runs on: `http://localhost:5173`
+Frontend default URL: `http://localhost:5173`
 
 ## API Endpoints
 
-### 1) Create Order
+Base URL: `/api`
 
-- Method: `POST`
-- URL: `/api/orders`
-- Body:
+- `POST /orders`
+- `PUT /orders/:id`
+- `GET /orders/:id`
+- `GET /orders`
+  - Query params:
+    - `search` (customer name)
+    - `status` (Placed | Packed | Shipped | Delivered)
+- `GET /orders/stats`
 
-```json
-{
-  "customerName": "Alice"
-}
-```
+### Response Format
 
-- Success response:
-
-```json
-{
-  "message": "Order created successfully",
-  "data": {
-    "id": 1,
-    "customerName": "Alice",
-    "status": "Placed"
-  }
-}
-```
-
-### 2) Update Order Status
-
-- Method: `PUT`
-- URL: `/api/orders/:id`
-- Body:
+All responses use:
 
 ```json
 {
-  "status": "Packed"
+  "success": true,
+  "message": "...",
+  "data": {}
 }
 ```
 
-Only next-step transitions are allowed.
+Error responses:
 
-### 3) Get Order Status by ID
-
-- Method: `GET`
-- URL: `/api/orders/:id`
-
-### 4) Get All Orders
-
-- Method: `GET`
-- URL: `/api/orders`
-
-## Sample Flow (curl)
-
-```bash
-# Create order
-curl -X POST http://localhost:5000/api/orders \
-  -H "Content-Type: application/json" \
-  -d '{"customerName":"Alice"}'
-
-# Update to Packed
-curl -X PUT http://localhost:5000/api/orders/1 \
-  -H "Content-Type: application/json" \
-  -d '{"status":"Packed"}'
-
-# Get one
-curl http://localhost:5000/api/orders/1
-
-# Get all
-curl http://localhost:5000/api/orders
+```json
+{
+  "success": false,
+  "message": "...",
+  "error": "..."
+}
 ```
+
+## Scripts
+
+### Backend
+
+- `npm run dev` - start with nodemon
+- `npm start` - production start
+- `npm run build` - production build step placeholder
+
+### Frontend
+
+- `npm run dev` - local dev server
+- `npm run build` - production build
+- `npm start` - preview production build
+
+## Deploy on Render (Backend)
+
+### Option A: `render.yaml` (recommended)
+
+This repo already includes `render.yaml`.
+
+1. Connect repository in Render.
+2. Render will detect the web service in `backend`.
+3. Set environment variable:
+   - `FRONTEND_API_URL` = your Netlify site URL
+4. Deploy.
+
+### Option B: Manual Render setup
+
+- Root directory: `backend`
+- Build command: `npm install`
+- Start command: `npm start`
+- Environment variables:
+  - `PORT` (Render can manage automatically)
+  - `FRONTEND_API_URL`
+
+## Deploy on Netlify (Frontend)
+
+This repo includes `netlify.toml` configured for `frontend`.
+
+1. Connect repository in Netlify.
+2. Netlify reads:
+   - Base: `frontend`
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+3. Add environment variable in Netlify:
+   - `VITE_FRONTEND_API_URL` = Render backend URL + `/api`
+     - Example: `https://your-render-service.onrender.com/api`
+4. Deploy.
 
 ## Notes
 
-- SQLite database file is created automatically at `backend/data/orders.db`.
-- If you want a fresh DB, stop server and delete `backend/data/orders.db`.
+- SQLite file is auto-created at `backend/data/orders.db`.
+- Timestamps are included for each order and updated on status changes.
+- CORS is configured for deployed frontend through `FRONTEND_API_URL`.

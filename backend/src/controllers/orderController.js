@@ -1,40 +1,15 @@
 const orderModel = require("../models/orderModel");
-
-const STATUS_FLOW = ["Placed", "Packed", "Shipped", "Delivered"];
-
-function getNextStatus(currentStatus) {
-    const index = STATUS_FLOW.indexOf(currentStatus);
-    if (index === -1 || index === STATUS_FLOW.length - 1) {
-        return null;
-    }
-    return STATUS_FLOW[index + 1];
-}
-
-function isValidTransition(currentStatus, nextStatus) {
-    return getNextStatus(currentStatus) === nextStatus;
-}
+const { sendSuccess, sendError } = require("../utils/apiResponse");
+const { getNextStatus, isValidTransition } = require("../utils/statusFlow");
 
 async function createOrder(req, res) {
     try {
         const { customerName } = req.body;
+        const newOrder = await orderModel.createOrder(customerName);
 
-        if (!customerName || typeof customerName !== "string" || !customerName.trim()) {
-            return res.status(400).json({
-                message: "customerName is required",
-            });
-        }
-
-        const newOrder = await orderModel.createOrder(customerName.trim());
-
-        return res.status(201).json({
-            message: "Order created successfully",
-            data: newOrder,
-        });
+        return sendSuccess(res, 201, "Order created successfully", newOrder);
     } catch (error) {
-        return res.status(500).json({
-            message: "Failed to create order",
-            error: error.message,
-        });
+        return sendError(res, 500, "Failed to create order", error.message);
     }
 }
 
@@ -43,43 +18,26 @@ async function updateOrderStatus(req, res) {
         const { id } = req.params;
         const { status } = req.body;
 
-        if (!status || !STATUS_FLOW.includes(status)) {
-            return res.status(400).json({
-                message: `status must be one of: ${STATUS_FLOW.join(", ")}`,
-            });
-        }
-
         const existingOrder = await orderModel.getOrderById(id);
 
         if (!existingOrder) {
-            return res.status(404).json({
-                message: "Order not found",
-            });
+            return sendError(res, 404, "Order not found");
         }
 
         if (!isValidTransition(existingOrder.status, status)) {
             const next = getNextStatus(existingOrder.status);
-            const details = next
+            const errorMessage = next
                 ? `Allowed next status is '${next}'`
                 : "Order is already in final status and cannot be updated";
 
-            return res.status(400).json({
-                message: "Invalid status transition",
-                details,
-            });
+            return sendError(res, 400, "Invalid status transition", errorMessage);
         }
 
         const updatedOrder = await orderModel.updateOrderStatus(id, status);
 
-        return res.status(200).json({
-            message: "Order status updated successfully",
-            data: updatedOrder,
-        });
+        return sendSuccess(res, 200, "Order status updated successfully", updatedOrder);
     } catch (error) {
-        return res.status(500).json({
-            message: "Failed to update order status",
-            error: error.message,
-        });
+        return sendError(res, 500, "Failed to update order status", error.message);
     }
 }
 
@@ -89,33 +47,38 @@ async function getOrderById(req, res) {
         const order = await orderModel.getOrderById(id);
 
         if (!order) {
-            return res.status(404).json({
-                message: "Order not found",
-            });
+            return sendError(res, 404, "Order not found");
         }
 
-        return res.status(200).json({
-            data: order,
-        });
+        return sendSuccess(res, 200, "Order fetched successfully", order);
     } catch (error) {
-        return res.status(500).json({
-            message: "Failed to fetch order",
-            error: error.message,
-        });
+        return sendError(res, 500, "Failed to fetch order", error.message);
     }
 }
 
 async function getAllOrders(req, res) {
     try {
-        const orders = await orderModel.getAllOrders();
-        return res.status(200).json({
-            data: orders,
+        const filters = {
+            search: req.query.search || "",
+            status: req.query.status || "",
+        };
+        const orders = await orderModel.getAllOrders(filters);
+        return sendSuccess(res, 200, "Orders fetched successfully", orders);
+    } catch (error) {
+        return sendError(res, 500, "Failed to fetch orders", error.message);
+    }
+}
+
+async function getOrderStats(req, res) {
+    try {
+        const stats = await orderModel.getOrderStats();
+        return sendSuccess(res, 200, "Order stats fetched successfully", {
+            totalOrders: Number(stats.totalOrders || 0),
+            deliveredOrders: Number(stats.deliveredOrders || 0),
+            pendingOrders: Number(stats.pendingOrders || 0),
         });
     } catch (error) {
-        return res.status(500).json({
-            message: "Failed to fetch orders",
-            error: error.message,
-        });
+        return sendError(res, 500, "Failed to fetch order stats", error.message);
     }
 }
 
@@ -124,6 +87,5 @@ module.exports = {
     updateOrderStatus,
     getOrderById,
     getAllOrders,
-    STATUS_FLOW,
-    getNextStatus,
+    getOrderStats,
 };

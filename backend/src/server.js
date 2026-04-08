@@ -2,23 +2,48 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
+const dotenv = require("dotenv");
 const orderRoutes = require("./routes/orderRoutes");
 const { initDB } = require("./config/db");
+const { sendError, sendSuccess } = require("./utils/apiResponse");
+
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const FRONTEND_API_URL = process.env.FRONTEND_API_URL || "";
 
-app.use(cors());
+const corsOptions = {
+    origin(origin, callback) {
+        if (!origin || !FRONTEND_API_URL || origin === FRONTEND_API_URL) {
+            return callback(null, true);
+        }
+
+        return callback(new Error("CORS policy blocked this origin"));
+    },
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.get("/health", (req, res) => {
-    res.status(200).json({ message: "API is running" });
+    return sendSuccess(res, 200, "API is running", {
+        uptimeSeconds: Math.floor(process.uptime()),
+    });
 });
 
 app.use("/api", orderRoutes);
 
+app.use((error, req, res, next) => {
+    if (error && error.message === "CORS policy blocked this origin") {
+        return sendError(res, 403, error.message);
+    }
+
+    return sendError(res, 500, "Internal server error", error?.message || null);
+});
+
 app.use((req, res) => {
-    res.status(404).json({ message: "Route not found" });
+    return sendError(res, 404, "Route not found");
 });
 
 const dataDir = path.join(__dirname, "../data");

@@ -18,9 +18,24 @@ async function initDB() {
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       customerName TEXT NOT NULL,
-      status TEXT NOT NULL
+            status TEXT NOT NULL,
+            createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+    const columns = await db.all("PRAGMA table_info(orders)");
+    const columnNames = columns.map((column) => column.name);
+
+    if (!columnNames.includes("createdAt")) {
+        await db.exec("ALTER TABLE orders ADD COLUMN createdAt TEXT");
+        await db.exec("UPDATE orders SET createdAt = CURRENT_TIMESTAMP WHERE createdAt IS NULL");
+    }
+
+    if (!columnNames.includes("updatedAt")) {
+        await db.exec("ALTER TABLE orders ADD COLUMN updatedAt TEXT");
+        await db.exec("UPDATE orders SET updatedAt = CURRENT_TIMESTAMP WHERE updatedAt IS NULL");
+    }
 
     return db;
 }

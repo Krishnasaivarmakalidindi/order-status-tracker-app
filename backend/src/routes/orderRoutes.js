@@ -4,13 +4,21 @@ const {
     updateOrderStatus,
     getOrderById,
     getAllOrders,
+    getOrderStats,
 } = require("../controllers/orderController");
+const {
+    validateOrderId,
+    validateCreateOrder,
+    validateUpdateStatus,
+    validateListQuery,
+} = require("../middleware/validationMiddleware");
 
 const router = express.Router();
 
-router.post("/orders", createOrder);
-router.put("/orders/:id", updateOrderStatus);
-router.get("/orders/:id", getOrderById);
-router.get("/orders", getAllOrders);
+router.get("/orders/stats", getOrderStats);
+router.get("/orders", validateListQuery, getAllOrders);
+router.get("/orders/:id", validateOrderId, getOrderById);
+router.post("/orders", validateCreateOrder, createOrder);
+router.put("/orders/:id", validateOrderId, validateUpdateStatus, updateOrderStatus);
 
 module.exports = router;

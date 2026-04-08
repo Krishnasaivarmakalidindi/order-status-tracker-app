@@ -1,7 +1,7 @@
 :root {
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    color: #1f2937;
-    background: #f3f4f6;
+    color: #172554;
+    background: #f8fafc;
 }
 
 * {
@@ -10,24 +10,91 @@
 
 body {
     margin: 0;
+    background: radial-gradient(circle at top, #e0f2fe, #f8fafc 34%);
 }
 
 .container {
-    max-width: 900px;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 24px;
+    padding: 32px 20px 64px;
+}
+
+.page-header {
+    margin-bottom: 16px;
+}
+
+h1,
+h2,
+p {
+    margin: 0;
 }
 
 h1 {
-    margin-top: 0;
+    margin-bottom: 8px;
+}
+
+h2 {
+    margin-bottom: 12px;
+}
+
+.muted {
+    color: #475569;
+    font-size: 14px;
 }
 
 .card {
     background: #ffffff;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
     margin-bottom: 16px;
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.stat-card {
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid transparent;
+}
+
+.stat-card.neutral {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.stat-card.success {
+    background: #ecfdf5;
+    border-color: #86efac;
+}
+
+.stat-card.warning {
+    background: #fff7ed;
+    border-color: #fdba74;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.filters-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
 }
 
 .field {
@@ -37,40 +104,45 @@ h1 {
     margin-bottom: 12px;
 }
 
-input {
+.grow {
+    flex: 1;
+}
+
+.filter-select {
+    min-width: 170px;
+}
+
+input,
+select {
+    width: 100%;
     padding: 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     border: 1px solid #cbd5e1;
+    background: #ffffff;
 }
 
 button {
     padding: 10px 12px;
     border: none;
-    border-radius: 6px;
-    background: #2563eb;
+    border-radius: 8px;
+    background: #0ea5e9;
     color: #fff;
     cursor: pointer;
+    transition: transform 0.15s ease, opacity 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
 }
 
 button:disabled {
     background: #94a3b8;
     cursor: not-allowed;
+    transform: none;
 }
 
-.message {
-    margin-bottom: 16px;
-    padding: 10px;
-    border-radius: 6px;
-}
-
-.message.success {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.message.error {
-    background: #fee2e2;
-    color: #991b1b;
+.secondary-btn {
+    background: #64748b;
 }
 
 .list {
@@ -82,37 +154,188 @@ button:disabled {
 .list-item {
     display: flex;
     justify-content: space-between;
-    gap: 16px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 12px;
+    gap: 18px;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    padding: 14px;
+    background: #f8fbff;
+}
+
+.order-id {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.order-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
 .actions {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     align-items: flex-end;
 }
 
-.step-indicator {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
-}
-
-.step {
-    display: inline-block;
-    padding: 3px 6px;
+.badge {
+    width: fit-content;
+    padding: 5px 9px;
     border-radius: 999px;
-    background: #e2e8f0;
-    color: #334155;
+    color: #fff;
     font-size: 12px;
+    font-weight: 700;
 }
 
-.step.done {
+.badge.placed {
+    background: #64748b;
+}
+
+.badge.packed {
+    background: #2563eb;
+}
+
+.badge.shipped {
+    background: #ea580c;
+}
+
+.badge.delivered {
+    background: #16a34a;
+}
+
+.stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.step-node {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.step-dot {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.step-dot.completed {
+    background: #bbf7d0;
+    color: #166534;
+}
+
+.step-dot.current {
     background: #bfdbfe;
-    color: #1e3a8a;
+    color: #1d4ed8;
+    animation: pulse 700ms ease;
+}
+
+.step-dot.upcoming {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.step-line {
+    display: inline-block;
+    width: 18px;
+    height: 2px;
+    background: #cbd5e1;
+}
+
+.empty-state {
+    text-align: center;
+    background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+.loading-card {
+    text-align: center;
+}
+
+.toast {
+    position: sticky;
+    top: 12px;
+    z-index: 20;
+    width: fit-content;
+    margin: 0 auto 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: #fff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+    animation: slideDown 260ms ease;
+}
+
+.toast.success {
+    background: #16a34a;
+}
+
+.toast.error {
+    background: #dc2626;
+}
+
+.pulse {
+    animation: popIn 500ms ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes popIn {
+    0% {
+        transform: scale(0.99);
+        box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+    }
+
+    50% {
+        transform: scale(1.01);
+        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0.15);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(34, 197, 94, 0);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 900px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .filters-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-select {
+        min-width: 100%;
+    }
 }
 
 @media (max-width: 720px) {
@@ -122,5 +345,9 @@ button:disabled {
 
     .actions {
         align-items: flex-start;
+    }
+
+    .stepper {
+        justify-content: flex-start;
     }
 }
